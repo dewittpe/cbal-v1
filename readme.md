@@ -7,7 +7,7 @@ Bregman distances as the criterion funcntion. The balancing weights are expresse
 as the generalized projection of the sampling weights into an intersection of hyperplanes.
 These hyperplanes define the moment constraints for the emprical distribution of the covariates.
 
-In its urrent form, cbal supports three bregman distances and requires a binary treatment assignment.
+In its current form, cbal supports three Bregman distances and requires a binary treatment assignment.
 In the future, this package will be extended to allow for more distance functions and multivalued
 treatment assignments.
 

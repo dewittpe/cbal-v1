@@ -86,7 +86,7 @@ cbalance.formula <- function(formula,
                    base_weights = base_weights,
                    coefs_init = coefs_init,
                    distance = distance,
-                   control = control, ...)
+                   control = control)
   
 }
 
@@ -97,8 +97,7 @@ cbalance.default <- function(constr_mat,
                              base_weights = NULL,
                              coefs_init = NULL,
                              distance = c("entropy", "binary", "shifted"),
-                             control = list(maxit = 500, reltol = 1e-10),
-                             ...) {
+                             control = list(maxit = 500, reltol = 1e-10)) {
 
   if (!(distance %in% c("entropy", "binary", "shifted", "euclidean")))
     stop("distance must be either \"entropy\", \"binary\", or \"shifted\"")
