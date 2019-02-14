@@ -1,6 +1,6 @@
 #' Covariate Balancing Weights via Generalized Projections of Bregman Distances
 #'
-#' The \code{cbalance} function solves a convex program with linear equality constraints determined by the 
+#' The \code{cbalance} function solves a convex program with linear equality constraints determined by the
 #' constraint matrix (\code{constr_mat}), the target margins (\code{target_margins}), and a Bregman distance (\code{distance}).
 #' If \code{cbalance.formula} is used, then the constraint matrix and target margins are determined by either the ATE, ATT, or ATC.
 #'
@@ -9,25 +9,26 @@
 #' Censor Y, Zenios SA (1998). Parallel Optimization: Theory, Algorithms, and Applications. 1st ed. New York:
 #' Oxford University Press.
 #'
-#' @param formula an object of class formula: a symbolic description of the model to be fitted.
-#' @param data a \code{data.frame}, list or environment containing the variables in the model. 
-#' @param estimand the assumed causal effect estimand. Can either be "ATE" for the average treatment effect,
-#' "ATT" for the average treatment effect of the treated, or "ATC" for the average treatment effect of the controls.
-#' @param distance the Bregman distance to be optimized. Can either be "entropy" for the relative entropy, 
-#' "binary" for the binary relative entropy, or "shifted" for the shifted relative entropy.
+#' @param ... further arguments passed to or from other methods.
+#'
+#' @export
+cbalance <- function(...) {
+  UseMethod("cbalance")
+}
+
 #' @param constr_mat a matrix that forms the basis of a linear subspace where the equality constraints of the
 #' optimization exist.
-#' @param target_margins the target margins of the linear equality constraints. This vector 
+#' @param target_margins the target margins of the linear equality constraints. This vector
 #' should have a length equal to the number of columns in \code{constr_mat}.
-#' @param base_weights a vector of optional sampling weights with length equal to the 
+#' @param distance the Bregman distance to be optimized. Can either be "entropy" for the relative entropy,
+#' "binary" for the binary relative entropy, or "shifted" for the shifted relative entropy.
+#' @param base_weights a vector of optional sampling weights with length equal to the
 #' number of rows in \code{constr_mat} or \code{data}.
 #' @param coefs_init initial values for the Lagrangian multipliers.
 #' @param control a list of arguments that will be passed to \code{optim}.
-#' @param ... additional arguments.
-#' 
-#' 
-#' @export
+#'
 #' @rdname cbalance
+#' @export
 cbalance.formula <- function(formula,
                              data,
                              distance = c("entropy", "binary", "shifted"),
@@ -86,18 +87,18 @@ cbalance.formula <- function(formula,
                    base_weights = base_weights,
                    coefs_init = coefs_init,
                    distance = distance,
-                   control = control)
+                   control = control, ...)
   
 }
 
 #' @export
-#' @rdname cbalance
 cbalance.default <- function(constr_mat,
                              target_margins,
+                             distance = c("entropy", "binary", "shifted"),
                              base_weights = NULL,
                              coefs_init = NULL,
-                             distance = c("entropy", "binary", "shifted"),
-                             control = list(maxit = 500, reltol = 1e-10)) {
+                             control = list(maxit = 500, reltol = 1e-10),
+                             ...) {
 
   if (!(distance %in% c("entropy", "binary", "shifted", "euclidean")))
     stop("distance must be either \"entropy\", \"binary\", or \"shifted\"")
@@ -161,8 +162,72 @@ cbalance.default <- function(constr_mat,
 
 }
 
-#' @export
+#' @param formula an object of class formula: a symbolic description of the model to be fitted.
+#' @param data a \code{data.frame}, list or environment containing the variables in the model.
+#' @param estimand the assumed causal effect estimand. Can either be "ATE" for the average treatment effect,
+#' "ATT" for the average treatment effect of the treated, or "ATC" for the average treatment effect of the controls.
+#"
 #' @rdname cbalance
-cbalance <- function(...) {
-  UseMethod("cbalance")
+#' @export
+cbalance.formula <- function(formula,
+                             data,
+                             estimand = c("ATE", "ATT", "ATC"),
+                             distance = c("entropy", "binary", "shifted"),
+                             base_weights = NULL,
+                             coefs_init = NULL,
+                             control = list(maxit = 500, reltol = 1e-10),
+                             ...) {
+
+  data <- as.data.frame(data)[stats::complete.cases(data),]
+  formula <- stats::as.formula(formula, env = environment(data))
+  yname <- as.character(formula[[2]])
+
+  y <- as.factor(data[,yname])
+  z <- ifelse(y == levels(y)[1], 0, 1)
+  X <- stats::model.matrix(formula, data = data)
+
+  # error checks
+  if(nlevels(y) != 2L)
+    stop(paste("nlevels(y) != 2\nnlevels =", nlevels(y)))
+
+  if (!(estimand %in% c("ATE", "ATT", "ATC")))
+    stop("estimand must be either \"ATE\", \"ATT\", or \"ATC\"")
+
+  if (is.null(base_weights)) { # initialize base_weights
+
+    if (distance == "binary")
+      base_weights <- rep(1/2, nrow(X))
+    else if (distance == "shifted")
+      base_weights <- rep(2, nrow(X))
+    else # distance == "entropy"
+      base_weights <- rep(1, nrow(X))
+
+  } else if (length(base_weights) != nrow(X))
+    stop("length(base_weights) != sample size")
+
+  if (estimand == "ATT") {
+
+    constr_mat <- as.matrix( (1 - z)*X )
+    target_margins <- c( t(z*X) %*% base_weights )
+
+  } else if (estimand == "ATC") {
+
+    constr_mat <- as.matrix( z*X )
+    target_margins <- c( t((1 - z)*X) %*% base_weights )
+
+  } else { # estimand == "ATE"
+
+    constr_mat <- as.matrix( (2*z - 1)*X )
+    target_margins <- rep(0, ncol(constr_mat))
+
+  }
+
+  cbalance(constr_mat = constr_mat,
+           target_margins = target_margins,
+           base_weights = base_weights,
+           coefs_init = coefs_init,
+           distance = distance,
+           control = control,
+           ...)
 }
+
