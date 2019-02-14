@@ -26,71 +26,8 @@ cbalance <- function(...) {
 #' number of rows in \code{constr_mat} or \code{data}.
 #' @param coefs_init initial values for the Lagrangian multipliers.
 #' @param control a list of arguments that will be passed to \code{optim}.
-#'
+#' 
 #' @rdname cbalance
-#' @export
-cbalance.formula <- function(formula,
-                             data,
-                             distance = c("entropy", "binary", "shifted"),
-                             estimand = c("ATE", "ATT", "ATC"),
-                             base_weights = NULL,
-                             coefs_init = NULL,
-                             control = list(maxit = 500, reltol = 1e-10),
-                             ...) {
-  
-  data <- as.data.frame(data)[stats::complete.cases(data),]
-  formula <- stats::as.formula(formula, env = environment(data))
-  yname <- as.character(formula[[2]])
-  
-  y <- as.factor(data[,yname])
-  z <- ifelse(y == levels(y)[1], 0, 1)
-  X <- stats::model.matrix(formula, data = data)
-  
-  # error checks
-  if(nlevels(y) != 2L)
-    stop(paste("nlevels(y) != 2\nnlevels =", nlevels(y)))
-  
-  if (!(estimand %in% c("ATE", "ATT", "ATC")))
-    stop("estimand must be either \"ATE\", \"ATT\", or \"ATC\"")
-  
-  if (is.null(base_weights)) { # initialize base_weights
-    
-    if (distance == "binary")
-      base_weights <- rep(1/2, nrow(X))
-    else if (distance == "shifted")
-      base_weights <- rep(2, nrow(X))
-    else # distance == "entropy"
-      base_weights <- rep(1, nrow(X))
-    
-  } else if (length(base_weights) != nrow(X))
-    stop("length(base_weights) != sample size")
-  
-  if (estimand == "ATT") {
-    
-    constr_mat <- as.matrix( (1 - z)*X )
-    target_margins <- c( t(z*X) %*% base_weights )
-    
-  } else if (estimand == "ATC") {
-    
-    constr_mat <- as.matrix( z*X )
-    target_margins <- c( t((1 - z)*X) %*% base_weights )
-    
-  } else { # estimand == "ATE"
-    
-    constr_mat <- as.matrix( (2*z - 1)*X )
-    target_margins <- rep(0, ncol(constr_mat))
-    
-  }
-  
-  cbalance.default(constr_mat = constr_mat,
-                   target_margins = target_margins,
-                   base_weights = base_weights,
-                   coefs_init = coefs_init,
-                   distance = distance,
-                   control = control, ...)
-  
-}
-
 #' @export
 cbalance.default <- function(constr_mat,
                              target_margins,
@@ -166,7 +103,7 @@ cbalance.default <- function(constr_mat,
 #' @param data a \code{data.frame}, list or environment containing the variables in the model.
 #' @param estimand the assumed causal effect estimand. Can either be "ATE" for the average treatment effect,
 #' "ATT" for the average treatment effect of the treated, or "ATC" for the average treatment effect of the controls.
-#"
+#'
 #' @rdname cbalance
 #' @export
 cbalance.formula <- function(formula,
