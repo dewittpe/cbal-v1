@@ -14,7 +14,7 @@ n <- 200
 iter <- 1000
 
 # simulate array of data
-simDat <- replicate(iter, gen_data(n = n, tau = tau, sig2 = sig2, rho = rho))
+simDat <- replicate(iter, ks_data(n = n, tau = tau, sig2 = sig2, rho = rho))
 
 # fit along with ebal
 tauHat_ebal <- tauHat_cbps <- vector(mode = "numeric", length = iter)
@@ -26,7 +26,7 @@ for (i in 1:iter) {
   y <- dat$y
   cov_dat <- subset(dat, select = c(x1, x2, x3, x4))
   
-  # fit_ebal <- cbalance(z ~ x1 + x2 + x3 + x4, data = dat, estimand = "ATE", distance = "entropy")
+  fit_ebal <- cbalance(z ~ x1 + x2 + x3 + x4, data = dat, estimand = "ATE", distance = "entropy")
   fit_ATE <- ATE(Y = y, Ti = treat, X = cov_dat)
   fit_cbps <- cbalance(z ~ x1 + x2 + x3 + x4, data = dat, estimand = "ATE", distance = "shifted")
   wts_ebal <- fit_ebal$weights

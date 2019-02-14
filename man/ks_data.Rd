@@ -14,6 +14,10 @@ ks_data(tau, n, sig2, rho, y_scen = c("a", "b"), z_scen = c("a", "b"))
 \item{sig2}{the marginal error variance of the potential outcomes. We assume heteroscedasticity.}
 
 \item{rho}{the correlation coefficient between the potential outcomes.}
+
+\item{y_scen}{defaults to \code{c("a", "b")}}
+
+\item{z_scen}{defaults to \code{c("a", "b")}}
 }
 \description{
 The \code{ks_data} function generates a dataset according to the experimental scenarios that appear in
