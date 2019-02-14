@@ -14,7 +14,7 @@ n <- 200
 iter <- 1000
 
 # simulate array of data
-simDat <- replicate(iter, gen_data(n = n, tau = tau, sig2 = sig2, rho = rho))
+simDat <- replicate(iter, ks_data(n = n, tau = tau, sig2 = sig2, rho = rho))
 
 # fit along with ebal
 tauHat_ebal <- tauHat_cbps <- vector(mode = "numeric", length = iter)
