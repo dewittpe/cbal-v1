@@ -8,6 +8,8 @@
 #' @param n the sample size.
 #' @param sig2 the marginal error variance of the potential outcomes. We assume heteroscedasticity.
 #' @param rho the correlation coefficient between the potential outcomes.
+#' @param y_scen defaults to \code{c("a", "b")}
+#' @param z_scen defaults to \code{c("a", "b")}
 #'
 #' @references
 #' 
