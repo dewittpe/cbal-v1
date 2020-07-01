@@ -2,51 +2,47 @@
 % Please edit documentation in R/cbalance.R
 \name{cbalance}
 \alias{cbalance}
-\alias{cbalance.default}
-\alias{cbalance.formula}
+\alias{cfit}
 \title{Covariate Balancing Weights via Generalized Projections of Bregman Distances}
 \usage{
-cbalance(...)
+cbalance(formula, data, distance = c("entropy", "binary", "shifted"),
+  base_weights = NULL, coefs_init = NULL, optim_ctrl = list(maxit =
+  500, reltol = 1e-10), ...)
 
-\method{cbalance}{default}(constr_mat, target_margins,
-  distance = c("entropy", "binary", "shifted"), base_weights = NULL,
-  coefs_init = NULL, control = list(maxit = 500, reltol = 1e-10), ...)
-
-\method{cbalance}{formula}(formula, data, estimand = c("ATE", "ATT",
-  "ATC"), distance = c("entropy", "binary", "shifted"),
-  base_weights = NULL, coefs_init = NULL, control = list(maxit = 500,
-  reltol = 1e-10), ...)
+cfit(cmat, target, distance = c("entropy", "binary", "shifted"),
+  base_weights = NULL, coefs_init = NULL, optim_ctrl = list(maxit =
+  500, reltol = 1e-10), ...)
 }
 \arguments{
-\item{...}{further arguments passed to or from other methods.}
+\item{formula}{an object of class \code{formula}: a symbolic description of the model to be fitted.}
 
-\item{constr_mat}{a matrix that forms the basis of a linear subspace where the equality constraints of the
-optimization exist.}
-
-\item{target_margins}{the target margins of the linear equality constraints. This vector
-should have a length equal to the number of columns in \code{constr_mat}.}
+\item{data}{a \code{data.frame}, list, or environment containing the variables in the model.}
 
 \item{distance}{the Bregman distance to be optimized. Can either be "entropy" for the relative entropy,
-"binary" for the binary relative entropy, or "shifted" for the shifted relative entropy.}
+"binary" for the binary relative entropy, or "shifted" for the shifted relative entropy. The distance also determines
+the causal effect estimand. "shifted" produces balancing weights for estimating the average treatment effect,
+"entropy" for the average treatment effect of the treated, and "binary" for a constant conditional average treatment effect.}
 
 \item{base_weights}{a vector of optional sampling weights with length equal to the
-number of rows in \code{constr_mat} or \code{data}.}
+number of rows in \code{cmat} or \code{X}.}
 
-\item{coefs_init}{initial values for the Lagrangian multipliers.}
+\item{coefs_init}{optional initialization points for the dual variables. Defaults to a vector of zeros.}
 
-\item{control}{a list of arguments that will be passed to \code{optim}.}
+\item{optim_ctrl}{a list of arguments that will be passed to \code{optim}.}
 
-\item{formula}{an object of class formula: a symbolic description of the model to be fitted.}
+\item{...}{additional arguments.}
 
-\item{data}{a \code{data.frame}, list or environment containing the variables in the model.}
+\item{cmat}{a matrix that forms the basis of a linear subspace which define the equality constraints of the
+convex program.}
 
-\item{estimand}{the assumed causal effect estimand. Can either be "ATE" for the average treatment effect,
-"ATT" for the average treatment effect of the treated, or "ATC" for the average treatment effect of the controls.}
+\item{target}{the target margins of the linear equality constraints. This vector
+should have a length equal to the number of columns in \code{cmat}.}
 }
 \description{
-The \code{cbalance} function solves a convex program with linear equality constraints determined by the
-constraint matrix (\code{constr_mat}), the target margins (\code{target_margins}), and a Bregman distance (\code{distance}).
-If \code{cbalance.formula} is used, then the constraint matrix and target margins are determined by either the ATE, ATT, or ATC.
+The \code{cbalance()} function solves a convex program with linear equality constraints determined by the
+estimand (\code{estimand}), the criterion function (\code{distance}), and the sampling weights (\code{base_weights}).
+The function \code{cbalance.fit()} provides a more direct means to solving the convex program. However, 
+the constraint matrix and target margins must be determined by the user.
 }
 \references{
 Censor Y, Zenios SA (1998). Parallel Optimization: Theory, Algorithms, and Applications. 1st ed. New York:
